@@ -13,6 +13,15 @@ Traditional ABR approaches use heuristics or MPC. This project
 instead trains a reinforcement learning policy using PPO to
 maximize QoE metrics.
 
+## Results
+The PPO-ABR algorithm implemented was compared to personal implementations of two other algorithms: RobustMPC and BBA.
+The BBA algorithm implemented did not use dynamic reservoir management. The startup phase was also simplified.
+
+![QoE Graph](results/qoe_by_trace.png)
+![Quality Graph](results/quality_by_trace.png)
+![Rebuffer Graph](results/rebuffer_by_trace.png)
+![Variation Graph](results/variation_by_trace.png)
+
 ## Repository Structure
 
 This repository includes:
