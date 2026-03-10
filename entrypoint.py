@@ -1,20 +1,21 @@
+"""
+Entrypoint for simulator.
+
+ClientMessage class imported from course, authored by Zach Peats.
+
+Authored by Matt Briggs
+License: MIT
+"""
+
 from typing import List
 from pathlib import Path
 from collections import deque
 import torch
 from .network import ACNet
 
-# Adapted from code by Zach Peats
-
 # ======================================================================================================================
-# Do not touch the client message class!
-# ======================================================================================================================
-
-
+# ClientMessage class by Zach Peats
 class ClientMessage:
-	"""
-	This class will be filled out and passed to student_entrypoint for your algorithm.
-	"""
 	total_seconds_elapsed: float	  # The number of simulated seconds elapsed in this test
 	previous_throughput: float		  # The measured throughput for the previous chunk in kB/s
 
@@ -50,33 +51,23 @@ class ClientMessage:
 
 	# You may use these to tune your algorithm to each user case! Remember, you can and should change these in the
 	# config files to simulate different clients!
-	#
-	#   User Quality of Experience =    (Average chunk quality) * (Quality Coefficient) +
-	#                                   -(Number of changes in chunk quality) * (Variation Coefficient)
-	#                                   -(Amount of time spent rebuffering) * (Rebuffering Coefficient)
-	#
-	#   *QoE is then divided by total number of chunks
-	#
+
 	quality_coefficient: float
 	variation_coefficient: float
 	rebuffering_coefficient: float
 # ======================================================================================================================
 
 
-# Your helper functions, variables, classes here. You may also write initialization routines to be called
-# when this script is first imported and anything else you wish.
-
-# observation/state constants (must match ppo.py training)
+# observation/state constants (matches ppo.py training)
 TP_HIST_LEN = 5
 QUALITY_LEVELS = 3 # always 3
 OBS_DIM = 2 + TP_HIST_LEN + 2  # = 9 (buf_frac, last_q, tp_hist x5, chunk_dl_time, chunks_remaining)
 TP_NORM_SCALAR = 5.0 # self.tp_norm_scalar in ppo.py
 
 # load trained model
-# simulator reload()s this module between tests, so this runs fresh each test
 _device = torch.device("cpu")
 _model = ACNet(obs_dim=OBS_DIM, act_dim=QUALITY_LEVELS)
-_model_path = Path("./student/ppo_model.pt")
+_model_path = Path("./ppo_model.pt")
 _model.load_state_dict(torch.load(_model_path, map_location=_device, weights_only=True))
 _model.eval()
 
@@ -102,34 +93,7 @@ def _message_to_tensor(msg: ClientMessage, chunks_remaining: float) -> torch.Ten
 
 	return torch.tensor([buf_frac, last_q, *tp_hist_norm, chunk_dl_time, chunks_remaining], dtype=torch.float32, device=_device)
 
-
-# Below are the resources I used in learning how to develop my algorithm:
-# https://github.com/ericyangyu/PPO-for-Beginners
-# https://medium.com/analytics-vidhya/coding-ppo-from-scratch-with-pytorch-part-1-4-613dfc1b14c8
-# https://spinningup.openai.com/en/latest/spinningup/rl_intro.html (all 3 parts)
-# https://arxiv.org/abs/1707.06347 (PPO paper)
-# https://nn.labml.ai/rl/ppo/gae.html (GAE implementation)
 def entrypoint(client_message: ClientMessage):
-	"""
-	Your mission, if you choose to accept it, is to build an algorithm for chunk bitrate selection that provides
-	the best possible experience for users streaming from your service.
-
-	Construct an algorithm below that selects a quality for a new chunk given the parameters in ClientMessage. Feel
-	free to create any helper function, variables, or classes as you wish.
-
-	Simulation does ~NOT~ run in real time. The code you write can be as slow and complicated as you wish without
-	penalizing your results. Focus on picking good qualities!
-
-	Also remember the config files are built for one particular client. You can (and should!) adjust the QoE metrics to
-	see how it impacts the final user score. How do algorithms work with a client that really hates rebuffering? What
-	about when the client doesn't care about variation? For what QoE coefficients does your algorithm work best, and
-	for what coefficients does it fail?
-
-	Args:
-		client_message : ClientMessage holding the parameters for this chunk and current client state.
-
-	:return: float Your quality choice. Must be one in the range [0 ... quality_levels - 1] inclusive.
-	"""
 	global _prev_quality, _tp_hist, _chunk_idx, _total_chunks
 
 	# previous_throughput in the message is throughput for the chunk that just finished downloading.
