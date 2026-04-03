@@ -11,9 +11,6 @@ import simulator
 
 from typing import List
 class ClientMessage:
-	"""
-	This class will be filled out and passed to student_entrypoint for your algorithm.
-	"""
 	total_seconds_elapsed: float	  # The number of simulated seconds elapsed in this test
 	previous_throughput: float		  # The measured throughput for the previous chunk in kB/s
 
@@ -25,49 +22,19 @@ class ClientMessage:
 	buffer_max_size: float              # The maximum size of the client buffer. If the client buffer is filled beyond
 										# maximum, then download will be throttled until the buffer is no longer full
 
-	# The quality bitrates are formatted as follows:
-	#
-	#   quality_levels is an integer reflecting the # of quality levels you may choose from.
-	#
-	#   quality_bitrates is a list of floats specifying the number of kilobytes the upcoming chunk is at each quality
-	#   level. Quality level 2 always costs twice as much as quality level 1, quality level 3 is twice as big as 2, and
-	#   so on.
-	#       quality_bitrates[0] = kB cost for quality level 1
-	#       quality_bitrates[1] = kB cost for quality level 2
-	#       ...
-	#
-	#   upcoming_quality_bitrates is a list of quality_bitrates for future chunks. Each entry is a list of
-	#   quality_bitrates that will be used for an upcoming chunk. Use this for algorithms that look forward multiple
-	#   chunks in the future. Will shrink and eventually become empty as streaming approaches the end of the video.
-	#       upcoming_quality_bitrates[0]: Will be used for quality_bitrates in the next student_entrypoint call
-	#       upcoming_quality_bitrates[1]: Will be used for quality_bitrates in the student_entrypoint call after that
-	#       ...
-	#
 	quality_levels: int
 	quality_bitrates: List[float]
 	upcoming_quality_bitrates: List[List[float]]
 
-	# You may use these to tune your algorithm to each user case! Remember, you can and should change these in the
-	# config files to simulate different clients!
-	#
-	#   User Quality of Experience =    (Average chunk quality) * (Quality Coefficient) +
-	#                                   -(Number of changes in chunk quality) * (Variation Coefficient)
-	#                                   -(Amount of time spent rebuffering) * (Rebuffering Coefficient)
-	#
-	#   *QoE is then divided by total number of chunks
-	#
 	quality_coefficient: float
 	variation_coefficient: float
 	rebuffering_coefficient: float
-# ======================================================================================================================
 
 TP_HIST_LEN = 5
 QUALITY_LEVELS = 3  # all .ini configs use 3 quality levels
 # obs_dim = (buf_frac, last_q)=2 + tp_hist=5 + chunk_dl_time=1 + chunks_remaining=1 => 9 total
 OBS_DIM = 2 + TP_HIST_LEN + 2
 
-# A lot of the boilerplate PPO code is from:
-# https://github.com/ericyangyu/PPO-for-Beginners/blob/master/ppo.py
 class PPO:
     def __init__(self, policy_model: ACNet, device: torch.device, config_dir_path: str):
         self.model = policy_model.to(device)
